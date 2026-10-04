@@ -151,34 +151,64 @@ with col2:
         gray = cv2.cvtColor(corrupted_img, cv2.COLOR_RGB2GRAY)
         features = extract_hog_features(gray)
         
-        if model_baseline and model_randomized:
-            prob_base = model_baseline.predict_proba(features)[0]
-            prob_rand = model_randomized.predict_proba(features)[0]
-            
-            top_base_idx = np.argsort(prob_base)[-3:][::-1]
-            top_rand_idx = np.argsort(prob_rand)[-3:][::-1]
-            
-            res_base = {CLASSES[i]: float(prob_base[i]) for i in top_base_idx}
-            res_rand = {CLASSES[i]: float(prob_rand[i]) for i in top_rand_idx}
-            
-            st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
-            
-            c_left, c_right = st.columns(2)
-            with c_left:
-                st.markdown('<div class="control-card">', unsafe_allow_html=True)
-                st.markdown("❌ **Naive Baseline Probability Distributions**")
-                status = "status-badge-fail" if severity > 2 else "status-badge-pass"
-                lbl = "Model Collapsed" if severity > 2 else "Optimal"
-                st.markdown(f"Operational State: <span class='{status}'>{lbl}</span>", unsafe_allow_html=True)
-                st.bar_chart(res_base)
-                st.markdown('</div>', unsafe_allow_html=True)
-                
-            with c_right:
-                st.markdown('<div class="control-card">', unsafe_allow_html=True)
-                st.markdown("✅ **Domain Randomized Robust Projections**")
-                st.markdown("Operational State: <span class='status-badge-pass'>Stable Adaptation</span>", unsafe_allow_html=True)
-                st.bar_chart(res_rand)
-                st.markdown('</div>', unsafe_allow_html=True)
+     # --- UPGRADED HIGH-IMPACT CARD MATRIX ---
+    top_base_idx = np.argmax(prob_base)
+    top_rand_idx = np.argmax(prob_rand)
+    
+    base_winner = CLASSES[top_base_idx]
+    base_conf = float(prob_base[top_base_idx])
+    
+    rand_winner = CLASSES[top_rand_idx]
+    rand_conf = float(prob_rand[top_rand_idx])
+
+    st.markdown("<div style='margin-top:28px;'></div>", unsafe_allow_html=True)
+    st.markdown("### 📊 Head-to-Head Architectural Convergence Matrix")
+    
+    # Split into modern side-by-side comparative cards
+    c_left, c_right = st.columns(2, gap="medium")
+    
+    with c_left:
+        st.markdown(f"""
+            <div class="control-card" style="border-left: 4px solid #ef4444; margin-bottom: 20px;">
+                <div style="display:flex; justify-content:between; align-items:center;">
+                    <span style="font-weight:800; color:#f87171; letter-spacing:0.5px;">❌ NAIVE BASELINE PREDICTION</span>
+                    <span class="status-badge-fail">{"OOD Breakdown" if severity > 2 else "Optimal"}</span>
+                </div>
+                <div style="margin: 16px 0;">
+                    <span style="font-size:12px; font-weight:700; color:#94a3b8; uppercase tracking-wider block;">Top Classified Projection</span>
+                    <span style="font-size:28px; font-weight:900; color:#ffffff; block; margin-top:2px;">{base_winner}</span>
+                </div>
+                <div style="font-size:13px; font-weight:600; color:#cbd5e1; display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span>Classification Confidence</span>
+                    <span>{base_conf*100:.1f}%</span>
+                </div>
+                <div style="background-color:#1e293b; border-radius:9999px; height:8px; overflow:hidden;">
+                    <div style="background:linear-gradient(90deg, #ef4444, #f43f5e); width:{base_conf*100}%; height:100%;"></div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    with c_right:
+        st.markdown(f"""
+            <div class="control-card" style="border-left: 4px solid #10b981; box-shadow: 0 0 15px rgba(16,185,129,0.15); margin-bottom: 20px;">
+                <div style="display:flex; justify-content:between; align-items:center;">
+                    <span style="font-weight:800; color:#34d399; letter-spacing:0.5px;">✅ DOMAIN ADAPTED PREDICTION</span>
+                    <span class="status-badge-pass">Invariant Match</span>
+                </div>
+                <div style="margin: 16px 0;">
+                    <span style="font-size:12px; font-weight:700; color:#94a3b8; uppercase tracking-wider block;">Top Classified Projection</span>
+                    <span style="font-size:28px; font-weight:900; color:#ffffff; block; margin-top:2px;">{rand_winner}</span>
+                </div>
+                <div style="font-size:13px; font-weight:600; color:#cbd5e1; display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span>Classification Confidence</span>
+                    <span>{rand_conf*100:.1f}%</span>
+                </div>
+                <div style="background-color:#1e293b; border-radius:9999px; height:8px; overflow:hidden;">
+                    <div style="background:linear-gradient(90deg, #10b981, #14b8a6); width:{rand_conf*100}%; height:100%;"></div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
     else:
         st.info("Awaiting clean simulation file configuration upload from control panel array indices.")
 
