@@ -4,6 +4,7 @@ import cv2
 import joblib
 import pandas as pd
 import altair as alt
+import os
 from skimage.feature import hog
 
 
@@ -82,13 +83,18 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# 2. RELATIVE DIRECTORY ASSETS PIPELINE LOADER
+# 2. FIXED ABSOLUTE PATH ASSETS LOADER
 @st.cache_resource
 def load_models():
     try:
-        # Load straight out of the active repository directory framework cleanly
-        base = joblib.load("baseline_model.pkl")
-        rand = joblib.load("randomized_model.pkl")
+        # Dynamically lock onto the exact folder directory where this python script lives
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        base_path = os.path.join(current_dir, "baseline_model.pkl")
+        rand_path = os.path.join(current_dir, "randomized_model.pkl")
+
+        base = joblib.load(base_path)
+        rand = joblib.load(rand_path)
+
         return base, rand
 
     except Exception as e:
@@ -116,7 +122,7 @@ CLASSES = [
     "Infinity_Symbol", "Hexadecagon", "Heptadecagon", "Octadecagon",
     "Enneadecagon",
     "Icosagon", "Triacontagon", "Tetracontagon", "Pentacontagon",
-    "Hexacontagon", "Heptacontagon", "Octacontagon", "Enneancontagon",
+    "Hexacontagon", "Heptacontagon", "Octacontagon", "Enneacontagon",
     "Hectagon", "Astroid",
     "Cardioid", "Cycloid", "Hyperboloid", "Paraboloid", "Deltoid",
     "Trefoil_Knot", "Quatrefoil", "Superellipse", "Folium", "Cissoid",
@@ -184,7 +190,12 @@ def apply_corruption(image, corruption_type, severity):
     elif corruption_type == "Color Shift":
         img = img.astype(np.int16)
         img[:, :, 0] += int(factor * 40)
-        img = np.clip(img, 0, 255).astype(np.uint8)
+
+        img = np.clip(
+            img,
+            0,
+            255
+        ).astype(np.uint8)
 
     elif corruption_type == "Extreme Lighting":
         img = np.clip(
@@ -266,7 +277,10 @@ if uploaded_file is not None:
         dtype=np.uint8
     )
 
-    opencv_img = cv2.imdecode(file_bytes, 1)
+    opencv_img = cv2.imdecode(
+        file_bytes,
+        1
+    )
 
     opencv_img = cv2.cvtColor(
         opencv_img,
@@ -321,8 +335,8 @@ if uploaded_file is not None:
 
             features = extract_hog_features(gray)
 
-            prob_base = model_baseline.predict_proba(features)[0]
-            prob_rand = model_randomized.predict_proba(features)[0]
+            prob_base = model_baseline.predict_proba(features)
+            prob_rand = model_randomized.predict_proba(features)
 
             top_b = np.argmax(prob_base)
             top_r = np.argmax(prob_rand)
@@ -437,10 +451,18 @@ if uploaded_file is not None:
                 df_acc = pd.DataFrame({
                     'Epoch': [1, 2, 3, 4, 5],
                     'Training Accuracy': [
-                        0.52, 0.71, 0.84, 0.93, 0.97
+                        0.52,
+                        0.71,
+                        0.84,
+                        0.93,
+                        0.97
                     ],
                     'Validation Accuracy': [
-                        0.48, 0.66, 0.79, 0.88, 0.91
+                        0.48,
+                        0.66,
+                        0.79,
+                        0.88,
+                        0.91
                     ]
                 }).melt(
                     'Epoch',
