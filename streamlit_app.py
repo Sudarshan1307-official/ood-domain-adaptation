@@ -674,4 +674,3 @@ else:
         "Awaiting input data vector initialization. Please upload a frame "
         "to unpack metrics."
     )
-```
